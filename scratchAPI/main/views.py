@@ -44,14 +44,25 @@ def fetch_domestic_trip_details(request, trip_id):
         response = requests.get(trip.details_url)
         if response.status_code==200:
             soup = BeautifulSoup(response.content, 'html.parser')
-            overview_tag = soup.select_one('div#overview .overview')
-            details_data["overview"] = overview_tag.get_text(strip=True) if overview_tag else ""
-            itinerary_tag = soup.select_one('div#itinerary .ckEditor')
-            details_data["itinerary"] = itinerary_tag.get_text(strip=True) if itinerary_tag else ""
-            included_tag = soup.select_one('div#included-excluded div:nth-child(1) div')
-            excluded_tag = soup.select_one('div#included-excluded div:nth-child(2) div')
-            details_data["included"] = included_tag.get_text(strip=True) if included_tag else ""
-            details_data["excluded"] = excluded_tag.get_text(strip=True) if excluded_tag else ""
+            overview = soup.select_one('div#overview .overview')
+            itinerary = soup.select_one('div#itinerary .ckEditor')
+            included = soup.select_one('div#included-excluded div:nth-child(1) div')
+            excluded = soup.select_one('div#included-excluded div:nth-child(2) div')
+
+            # Save scraped data to database
+            trip.overview = overview.get_text(strip=True) if overview else ""
+            trip.itinerary = itinerary.get_text(strip=True) if itinerary else ""
+            trip.included = included.get_text(strip=True) if included else ""
+            trip.excluded = excluded.get_text(strip=True) if excluded else ""
+            trip.save()
+
+            # Prepare response
+            details_data.update({
+                "overview": trip.overview,
+                "itinerary": trip.itinerary,
+                "included": trip.included,
+                "excluded": trip.excluded
+            })
         else:
             details_data["error"] = "Unable to fetch details"
     else:
@@ -99,14 +110,25 @@ def fetch_international_trip_details(request, trip_id):
         response = requests.get(trip.details_url)
         if response.status_code==200:
             soup = BeautifulSoup(response.content, 'html.parser')
-            overview_tag = soup.select_one('div#overview .overview')
-            details_data["overview"] = overview_tag.get_text(strip=True) if overview_tag else ""
-            itinerary_tag = soup.select_one('div#itinerary .ckEditor')
-            details_data["itinerary"] = itinerary_tag.get_text(strip=True) if itinerary_tag else ""
-            included_tag = soup.select_one('div#included-excluded div:nth-child(1) div')
-            excluded_tag = soup.select_one('div#included-excluded div:nth-child(2) div')
-            details_data["included"] = included_tag.get_text(strip=True) if included_tag else ""
-            details_data["excluded"] = excluded_tag.get_text(strip=True) if excluded_tag else ""
+            overview = soup.select_one('div#overview .overview')
+            itinerary = soup.select_one('div#itinerary .ckEditor')
+            included = soup.select_one('div#included-excluded div:nth-child(1) div')
+            excluded = soup.select_one('div#included-excluded div:nth-child(2) div')
+
+            # Save scraped data to database
+            trip.overview = overview.get_text(strip=True) if overview else ""
+            trip.itinerary = itinerary.get_text(strip=True) if itinerary else ""
+            trip.included = included.get_text(strip=True) if included else ""
+            trip.excluded = excluded.get_text(strip=True) if excluded else ""
+            trip.save()
+
+            # Prepare response
+            details_data.update({
+                "overview": trip.overview,
+                "itinerary": trip.itinerary,
+                "included": trip.included,
+                "excluded": trip.excluded
+            })
         else:
             details_data["error"] = "Unable to fetch details"
     else:
