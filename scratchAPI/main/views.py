@@ -27,7 +27,7 @@ def fetch_domestic_trips(request):
                     "details_url":details_url
                 } 
             )
-    domestic_destinations = list(DomesticTrip.objects.values())
+    domestic_destinations = list(DomesticTrip.objects.values('id','title','description','details_url'))
     return JsonResponse({"domestic_destination": domestic_destinations})
 
 def fetch_domestic_trip_details(request, trip_id):
@@ -93,7 +93,7 @@ def fetch_international_trips(request):
                     "details_url": details_url
                 }
             )
-    international_destinations = list(InternationalTrip.objects.values())
+    international_destinations = list(InternationalTrip.objects.values('id','title','description','details_url'))
     return JsonResponse({"international_destination": international_destinations})
 
 def fetch_international_trip_details(request, trip_id):
