@@ -6,3 +6,6 @@ from .models import Services
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ('title','description')
     search_fields = ('title', 'description')
+
+    verbose_name = "Service"
+    verbose_name_plural = "Services"
