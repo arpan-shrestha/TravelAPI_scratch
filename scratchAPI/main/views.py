@@ -30,7 +30,33 @@ def fetch_domestic_trips(request):
     domestic_destinations = list(DomesticTrip.objects.values())
     return JsonResponse({"domestic_destination": domestic_destinations})
 
-# def fetch_domestic_trip_details(request, slug):
+def fetch_domestic_trip_details(request, trip_id):
+    try:
+        trip = DomesticTrip.objects.get(id=trip_id)
+    except DomesticTrip.DoesNotExist:
+        return JsonResponse({"error":"Domestic Trip not found"}, status=404)
+    details_data = {
+        "title":trip.title,
+        "description":trip.description,
+        "details_url":trip.details_url
+    }
+    if trip.details_url:
+        response = requests.get(trip.details_url)
+        if response.status_code==200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            overview_tag = soup.select_one('div#overview .overview')
+            details_data["overview"] = overview_tag.get_text(strip=True) if overview_tag else ""
+            itinerary_tag = soup.select_one('div#itinerary .ckEditor')
+            details_data["itinerary"] = itinerary_tag.get_text(strip=True) if itinerary_tag else ""
+            included_tag = soup.select_one('div#included-excluded div:nth-child(1) div')
+            excluded_tag = soup.select_one('div#included-excluded div:nth-child(2) div')
+            details_data["included"] = included_tag.get_text(strip=True) if included_tag else ""
+            details_data["excluded"] = excluded_tag.get_text(strip=True) if excluded_tag else ""
+        else:
+            details_data["error"] = "Unable to fetch details"
+    else:
+        details_data["error"] = "No details URL provided"
+    return JsonResponse(details_data)
 
 
 def fetch_international_trips(request):
@@ -59,3 +85,30 @@ def fetch_international_trips(request):
     international_destinations = list(InternationalTrip.objects.values())
     return JsonResponse({"international_destination": international_destinations})
 
+def fetch_international_trip_details(request, trip_id):
+    try:
+        trip = InternationalTrip.objects.get(id=trip_id)
+    except InternationalTrip.DoesNotExist:
+        return JsonResponse({"error":"International Trip not found"}, status=404)
+    details_data = {
+        "title":trip.title,
+        "description":trip.description,
+        "details_url":trip.details_url
+    }
+    if trip.details_url:
+        response = requests.get(trip.details_url)
+        if response.status_code==200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            overview_tag = soup.select_one('div#overview .overview')
+            details_data["overview"] = overview_tag.get_text(strip=True) if overview_tag else ""
+            itinerary_tag = soup.select_one('div#itinerary .ckEditor')
+            details_data["itinerary"] = itinerary_tag.get_text(strip=True) if itinerary_tag else ""
+            included_tag = soup.select_one('div#included-excluded div:nth-child(1) div')
+            excluded_tag = soup.select_one('div#included-excluded div:nth-child(2) div')
+            details_data["included"] = included_tag.get_text(strip=True) if included_tag else ""
+            details_data["excluded"] = excluded_tag.get_text(strip=True) if excluded_tag else ""
+        else:
+            details_data["error"] = "Unable to fetch details"
+    else:
+        details_data["error"] = "No details URL provided"
+    return JsonResponse(details_data)
