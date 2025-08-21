@@ -1,5 +1,4 @@
-from django.shortcuts import render
-from .models import DomesticTrip
+from .models import DomesticTrip, InternationalTrip
 from django.http import JsonResponse
 import requests
 from bs4 import BeautifulSoup
@@ -16,10 +15,11 @@ def fetch_domestic_trips(request):
             title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
             description = item.find('p').text.strip() if item.find('p') else 'No Description'
 
-            domestic_destinations.append({
-                'title':title,
-                'description':description
-            })
+            DomesticTrip.objects.get_or_create(
+                title=title, 
+                description=description
+            )
+    domestic_destinations = list(DomesticTrip.objects.values())
     return JsonResponse({"domestic_destination": domestic_destinations})
 
 def fetch_international_trips(request):
@@ -34,8 +34,10 @@ def fetch_international_trips(request):
             title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
             description = item.find('p').text.strip() if item.find('p') else 'No Description'
 
-            international_destinations.append({
-                'title':title,
-                'description':description
-            })
+            InternationalTrip.objects.get_or_create(
+                title=title,
+                description=description,
+            )
+    international_destinations = list(InternationalTrip.objects.values())
     return JsonResponse({"international_destination": international_destinations})
+

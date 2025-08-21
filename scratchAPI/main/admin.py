@@ -1,3 +1,12 @@
 from django.contrib import admin
+from .models import DomesticTrip, InternationalTrip
 
-# Register your models here.
+@admin.register(DomesticTrip)
+class DomesticTripAdmin(admin.ModelAdmin):
+    list_display = ('title', 'description')  
+    search_fields = ('title', 'description')             
+
+@admin.register(InternationalTrip)
+class InternationalTripAdmin(admin.ModelAdmin):
+    list_display = ('title', 'description')
+    search_fields = ('title', 'description')
