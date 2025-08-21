@@ -29,7 +29,7 @@ def services(request):
                     "details_url":details_url
                 }
             )
-    services_list = list(Services.objects.values())
+    services_list = list(Services.objects.values('id', 'title', 'description', 'details_url'))
     return JsonResponse({'services':services_list})
 
 
