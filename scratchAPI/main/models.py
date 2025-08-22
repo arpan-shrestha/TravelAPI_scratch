@@ -5,7 +5,7 @@ class DomesticTrip(models.Model):
     description = models.TextField()
     details_url = models.URLField(max_length=500,blank=True, null=True)
     overview = models.TextField(blank=True, null=True)
-    itinerary = models.TextField(blank=True, null=True)
+    itinerary = models.JSONField(default=list,blank=True, null=True)
     included = models.TextField(blank=True, null=True)
     excluded = models.TextField(blank=True, null=True)
 
@@ -17,7 +17,7 @@ class InternationalTrip(models.Model):
     description = models.TextField()
     details_url = models.URLField(max_length=500, blank=True, null=True)
     overview = models.TextField(blank=True, null=True)
-    itinerary = models.TextField(blank=True, null=True)
+    itinerary = models.JSONField(default=list, blank=True, null=True)
     included = models.TextField(blank=True, null=True)
     excluded = models.TextField(blank=True, null=True)
 

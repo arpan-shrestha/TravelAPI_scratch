@@ -3,6 +3,9 @@ from django.http import JsonResponse
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
+import re
+import json
+from django.views.decorators.csrf import csrf_exempt
 
 def fetch_domestic_trips(request):
     url = "https://www.antholidays.com/destination-domestic/"
@@ -15,8 +18,7 @@ def fetch_domestic_trips(request):
         for item in items:
             title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
             description = item.find('p').text.strip() if item.find('p') else 'No Description'
-            a_tag = item.find('a', href=True)
-            details_url = a_tag['href'] if a_tag else None
+            details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
             if details_url:
                 details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
 
@@ -51,7 +53,17 @@ def fetch_domestic_trip_details(request, trip_id):
 
             # Save scraped data to database
             trip.overview = overview.get_text(strip=True) if overview else ""
-            trip.itinerary = itinerary.get_text(strip=True) if itinerary else ""
+            if itinerary:
+                text = itinerary.get_text("\n", strip=True)
+                day_blocks = re.split(r'(Day\s*\d+)', text)
+                structured_itinerary = []
+                for i in range(1, len(day_blocks), 2):  
+                    day = day_blocks[i] 
+                    details = day_blocks[i+1].strip()
+                    structured_itinerary.append(f"{day}: {details}")
+                trip.itinerary = structured_itinerary
+            else:
+                trip.itinerary = []
             trip.included = included.get_text(strip=True) if included else ""
             trip.excluded = excluded.get_text(strip=True) if excluded else ""
             trip.save()
@@ -81,8 +93,7 @@ def fetch_international_trips(request):
         for item in items:
             title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
             description = item.find('p').text.strip() if item.find('p') else 'No Description'
-            a_tag = item.find('a', href=True)
-            details_url = a_tag['href'] if a_tag else None
+            details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
             if details_url:
                 details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
 
@@ -117,12 +128,21 @@ def fetch_international_trip_details(request, trip_id):
 
             # Save scraped data to database
             trip.overview = overview.get_text(strip=True) if overview else ""
-            trip.itinerary = itinerary.get_text(strip=True) if itinerary else ""
+            if itinerary:
+                text = itinerary.get_text("\n", strip=True)
+                day_blocks = re.split(r'(Day\s*\d+)', text)
+                structured_itinerary = []
+                for i in range(1, len(day_blocks), 2):  
+                    day = day_blocks[i] 
+                    details = day_blocks[i+1].strip()
+                    structured_itinerary.append(f"{day}: {details}")
+                trip.itinerary = structured_itinerary
+            else:
+                trip.itinerary = []
             trip.included = included.get_text(strip=True) if included else ""
             trip.excluded = excluded.get_text(strip=True) if excluded else ""
             trip.save()
 
-            # Prepare response
             details_data.update({
                 "overview": trip.overview,
                 "itinerary": trip.itinerary,
@@ -134,3 +154,44 @@ def fetch_international_trip_details(request, trip_id):
     else:
         details_data["error"] = "No details URL provided"
     return JsonResponse(details_data)
+
+
+@csrf_exempt
+def add_domestic_trip(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            trip = DomesticTrip.objects.create(
+                title = data.get('title',''),
+                description = data.get('description',''),
+                details_url = data.get('details_url',''),
+                overview = data.get('overview',''),
+                itinerary = data.get('itinerary',[]),
+                included = data.get('included',''),
+                excluded = data.get('excluded',''),
+            )
+            return JsonResponse({'success':True, 'id':trip.id})
+        except Exception as e:
+            return JsonResponse({'success':False,'error':str(e)}, status=400)
+    return JsonResponse({'error':'POST Method is required'}, status=405)
+
+
+
+@csrf_exempt
+def add_international_trip(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            trip = InternationalTrip.objects.create(
+                title=data.get('title',''),
+                description = data.get('description',''),
+                details_url=data.get('details_url',''),
+                overview = data.get('overview',''),
+                itinerary = data.get('itinerary',[]),
+                included = data.get('included',''),
+                excluded = data.get('excluded','')
+            )
+            return JsonResponse({'success':True,'id':trip.id})
+        except Exception as e:
+            return JsonResponse({'success':False,'error':str(e)}, status=400)
+    return JsonResponse({'error':'POST Method is required'}, status=405)

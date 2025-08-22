@@ -3,6 +3,9 @@ from django.http import JsonResponse
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
 
 # Create your views here.
 
@@ -59,3 +62,19 @@ def fetch_service_details(request, service_id):
     else:
         details_data["error"] = "No details URL provided"
     return JsonResponse(details_data)
+
+
+@csrf_exempt
+def add_service(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            service = Services.objects.create(
+                title=data.get('title',''),
+                description=data.get('description',''),
+                details_url=data.get('details_url',''),
+            )
+            return JsonResponse({'success':True,'id':service.id})
+        except Exception as e:
+            return JsonResponse({'success':False, 'error':str(e)}, status=400)
+    return JsonResponse({'error':'POST MEthod is required'}, status=405)
