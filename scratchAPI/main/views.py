@@ -8,28 +8,31 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 
 def fetch_domestic_trips(request):
-    url = "https://www.antholidays.com/destination-domestic/"
-    domestic_destinations=[]
-    response = requests.get(url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        items = soup.select('div.hover\\:shadow-lg.border')
+    domestic_destinations=list(DomesticTrip.objects.values('id','title','description','details_url'))
+    if not domestic_destinations:
+        url = "https://www.antholidays.com/destination-domestic/"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                items = soup.select('div.hover\\:shadow-lg.border')
 
-        for item in items:
-            title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
-            description = item.find('p').text.strip() if item.find('p') else 'No Description'
-            details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
-            if details_url:
-                details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
-
-            DomesticTrip.objects.get_or_create(
-                title=title,
-                defaults={
-                    "description":description,
-                    "details_url":details_url
-                } 
-            )
-    domestic_destinations = list(DomesticTrip.objects.values('id','title','description','details_url'))
+                for item in items:
+                    title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
+                    description = item.find('p').text.strip() if item.find('p') else 'No Description'
+                    details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
+                    if details_url:
+                        details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
+                        DomesticTrip.objects.get_or_create(
+                            title=title,
+                            defaults={
+                                "description":description,
+                                "details_url":details_url
+                            }
+                        )
+            domestic_destinations = list(DomesticTrip.objects.values('id','title','description','details_url'))
+        except Exception as e:
+            return JsonResponse({"error":"Could not fetch website, and no data in DB.","details":str(e)}, status=500)
     return JsonResponse({"domestic_destination": domestic_destinations})
 
 def fetch_domestic_trip_details(request, trip_id):
@@ -83,28 +86,31 @@ def fetch_domestic_trip_details(request, trip_id):
 
 
 def fetch_international_trips(request):
-    url = "https://www.antholidays.com/destination-international"
-    international_destinations=[]
-    response = requests.get(url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        items = soup.select('div.hover\\:shadow-lg.border')
+    international_destinations=list(InternationalTrip.objects.values('id','title','description','details_url'))
+    if not international_destinations:
+        url = "https://www.antholidays.com/destination-international"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                items = soup.select('div.hover\\:shadow-lg.border')
 
-        for item in items:
-            title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
-            description = item.find('p').text.strip() if item.find('p') else 'No Description'
-            details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
-            if details_url:
-                details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
-
-            InternationalTrip.objects.get_or_create(
-                title=title,
-                defaults={
-                    "description": description,
-                    "details_url": details_url
-                }
+                for item in items:
+                    title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
+                    description = item.find('p').text.strip() if item.find('p') else 'No Description'
+                    details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
+                    if details_url:
+                        details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
+                        InternationalTrip.objects.get_or_create(
+                            title=title,
+                            defaults={
+                                "description": description,
+                                "details_url": details_url
+                            }
             )
-    international_destinations = list(InternationalTrip.objects.values('id','title','description','details_url'))
+            international_destinations = list(InternationalTrip.objects.values('id','title','description','details_url'))
+        except Exception as e:
+            return JsonResponse({"error":"Cound not fetch website, and no data in DB.","details":str(e)}, status=500)
     return JsonResponse({"international_destination": international_destinations})
 
 def fetch_international_trip_details(request, trip_id):
@@ -195,3 +201,6 @@ def add_international_trip(request):
         except Exception as e:
             return JsonResponse({'success':False,'error':str(e)}, status=400)
     return JsonResponse({'error':'POST Method is required'}, status=405)
+
+
+
