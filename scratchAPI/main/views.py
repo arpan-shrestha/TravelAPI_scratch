@@ -1,9 +1,5 @@
 from .models import DomesticTrip, InternationalTrip
 from django.http import JsonResponse
-import requests
-from bs4 import BeautifulSoup
-import urllib.parse
-import re
 import json
 from django.views.decorators.csrf import csrf_exempt
 from collections import OrderedDict

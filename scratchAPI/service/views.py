@@ -1,8 +1,5 @@
 from .models import Services
 from django.http import JsonResponse
-import requests
-from bs4 import BeautifulSoup
-import urllib.parse
 from django.views.decorators.csrf import csrf_exempt
 import json
 
@@ -10,31 +7,9 @@ import json
 # Create your views here.
 
 def services(request):
-    services_list = list(Services.objects.values('id', 'title', 'description', 'details_url'))
-    if not services_list:
-        url = "https://www.antholidays.com/services"
-        try:
-            response = requests.get(url)
-            if response.status_code ==200:
-                soup = BeautifulSoup(response.content, 'html.parser')
-                items = soup.select('div.hover\\:shadow-lg.border')
-                for item in items:
-                    title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
-                    description = item.find('p').text.strip() if item.find('p') else 'No Description'
-                    a_tag = item.find('a', href=True)
-                    details_url = a_tag['href'] if a_tag else None
-                    if details_url:
-                        details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
-                        Services.objects.get_or_create(
-                            title=title,
-                            defaults={
-                                "description":description,
-                                "details_url":details_url
-                            }
-)
-            services_list = list(Services.objects.values('id', 'title', 'description', 'details_url'))
-        except Exception as e:
-            return JsonResponse({"error":"Could not fetch website, and no data in DB.","details":str(e)}, status=500)    
+    services_list = list(Services.objects.values(
+        'id', 'title', 'description', 'details_url'
+    ))   
     return JsonResponse({'services':services_list})
 
 
@@ -47,7 +22,7 @@ def fetch_service_details(request, service_id):
         "title": service.title,
         "description": service.description,
         "details_url": service.details_url,
-        "content": service.content if hasattr(service, 'content') else ""
+        "content": service.content 
     }
     return JsonResponse(details_data)
 
@@ -60,8 +35,37 @@ def add_service(request):
                 title=data.get('title',''),
                 description=data.get('description',''),
                 details_url=data.get('details_url',''),
+                content = data.get('content','')
             )
             return JsonResponse({'success':True,'id':service.id})
         except Exception as e:
             return JsonResponse({'success':False, 'error':str(e)}, status=400)
     return JsonResponse({'error':'POST MEthod is required'}, status=405)
+
+@csrf_exempt
+def update_service(request, service_id):
+    if request.method in ['PUT', 'PATCH']:
+        try:
+            service = Services.objects.get(id=service_id)
+            data = json.loads(request.body)
+            
+            service.title = data.get('title',service.title)
+            service.description = data.get('description',service.description)
+            service.details_url = data.get('details_url',service.details_url)
+            service.content = data.get('content',service.content)
+            service.save()
+            return JsonResponse({'success':True})
+        except Services.DoesNotExist:
+            return JsonResponse({'error':'Services not Found'}, status=400)
+    return JsonResponse({'error':'Check your Method'}, status=405)
+
+@csrf_exempt
+def delete_service(request, service_id):
+    if request.method == 'DELETE':
+        try:
+            service = Services.objects.get(id=service_id)
+            service.delete()
+            return JsonResponse({'success':True})
+        except Services.DoesNotExist:
+            return JsonResponse({'error':'Services not found'},status=400)
+    return JsonResponse({'error':'Check your Method'}, status=405)
