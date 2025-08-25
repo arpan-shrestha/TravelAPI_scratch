@@ -6,111 +6,44 @@ import urllib.parse
 import re
 import json
 from django.views.decorators.csrf import csrf_exempt
+from collections import OrderedDict
 
 def fetch_domestic_trips(request):
-    domestic_destinations=list(DomesticTrip.objects.values('id','title','description','details_url'))
-    if not domestic_destinations:
-        url = "https://www.antholidays.com/destination-domestic/"
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.content, 'html.parser')
-                items = soup.select('div.hover\\:shadow-lg.border')
-
-                for item in items:
-                    title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
-                    description = item.find('p').text.strip() if item.find('p') else 'No Description'
-                    details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
-                    if details_url:
-                        details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
-                        DomesticTrip.objects.get_or_create(
-                            title=title,
-                            defaults={
-                                "description":description,
-                                "details_url":details_url
-                            }
-                        )
-            domestic_destinations = list(DomesticTrip.objects.values('id','title','description','details_url'))
-        except Exception as e:
-            return JsonResponse({"error":"Could not fetch website, and no data in DB.","details":str(e)}, status=500)
-    return JsonResponse({"domestic_destination": domestic_destinations})
+    domestic_destinations = list(DomesticTrip.objects.values(
+        'id', 'title', 'description', 'details_url'
+    ))
+    return JsonResponse({"domestic_destinations": domestic_destinations})
 
 def fetch_domestic_trip_details(request, trip_id):
     try:
         trip = DomesticTrip.objects.get(id=trip_id)
     except DomesticTrip.DoesNotExist:
-        return JsonResponse({"error":"Domestic Trip not found"}, status=404)
+        return JsonResponse({"error": "Domestic Trip not found"}, status=404)
+    ordered_itinerary = []
+    for item in trip.itinerary or []:
+        ordered_itinerary.append(
+            OrderedDict([
+                ("heading", item.get("heading", "")),
+                ("details", item.get("details", ""))
+            ])
+        )
     details_data = {
-        "title":trip.title,
-        "description":trip.description,
-        "details_url":trip.details_url
+        'title': trip.title,
+        'description': trip.description,
+        'details_url': trip.details_url,
+        'overview': trip.overview or "",
+        'itinerary': ordered_itinerary,
+        'included': trip.included or "",
+        'excluded': trip.excluded or "",
     }
-    if trip.details_url:
-        response = requests.get(trip.details_url)
-        if response.status_code==200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            overview = soup.select_one('div#overview .overview')
-            itinerary = soup.select_one('div#itinerary .ckEditor')
-            included = soup.select_one('div#included-excluded div:nth-child(1) div')
-            excluded = soup.select_one('div#included-excluded div:nth-child(2) div')
 
-            # Save scraped data to database
-            trip.overview = overview.get_text(strip=True) if overview else ""
-            if itinerary:
-                text = itinerary.get_text("\n", strip=True)
-                day_blocks = re.split(r'(Day\s*\d+)', text)
-                structured_itinerary = []
-                for i in range(1, len(day_blocks), 2):  
-                    day = day_blocks[i] 
-                    details = day_blocks[i+1].strip()
-                    structured_itinerary.append(f"{day}: {details}")
-                trip.itinerary = structured_itinerary
-            else:
-                trip.itinerary = []
-            trip.included = included.get_text(strip=True) if included else ""
-            trip.excluded = excluded.get_text(strip=True) if excluded else ""
-            trip.save()
-
-            # Prepare response
-            details_data.update({
-                "overview": trip.overview,
-                "itinerary": trip.itinerary,
-                "included": trip.included,
-                "excluded": trip.excluded
-            })
-        else:
-            details_data["error"] = "Unable to fetch details"
-    else:
-        details_data["error"] = "No details URL provided"
     return JsonResponse(details_data)
 
 
 def fetch_international_trips(request):
-    international_destinations=list(InternationalTrip.objects.values('id','title','description','details_url'))
-    if not international_destinations:
-        url = "https://www.antholidays.com/destination-international"
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.content, 'html.parser')
-                items = soup.select('div.hover\\:shadow-lg.border')
-
-                for item in items:
-                    title = item.find('h2').text.strip() if item.find('h2') else 'No Title'
-                    description = item.find('p').text.strip() if item.find('p') else 'No Description'
-                    details_url = item.find('a', href=True)['href'] if item.find('a', href=True) else None
-                    if details_url:
-                        details_url = urllib.parse.urljoin("https://www.antholidays.com", details_url)
-                        InternationalTrip.objects.get_or_create(
-                            title=title,
-                            defaults={
-                                "description": description,
-                                "details_url": details_url
-                            }
-            )
-            international_destinations = list(InternationalTrip.objects.values('id','title','description','details_url'))
-        except Exception as e:
-            return JsonResponse({"error":"Cound not fetch website, and no data in DB.","details":str(e)}, status=500)
+    international_destinations=list(InternationalTrip.objects.values(
+        'id','title','description','details_url'
+        ))
     return JsonResponse({"international_destination": international_destinations})
 
 def fetch_international_trip_details(request, trip_id):
@@ -118,49 +51,24 @@ def fetch_international_trip_details(request, trip_id):
         trip = InternationalTrip.objects.get(id=trip_id)
     except InternationalTrip.DoesNotExist:
         return JsonResponse({"error":"International Trip not found"}, status=404)
+    ordered_itinerary = []
+    for item in trip.itinerary or []:
+        ordered_itinerary.append(
+            OrderedDict([
+                ("heading", item.get("heading", "")),
+                ("details", item.get("details", ""))
+            ])
+        )
     details_data = {
-        "title":trip.title,
-        "description":trip.description,
-        "details_url":trip.details_url
+        'title': trip.title,
+        'description': trip.description,
+        'details_url': trip.details_url,
+        'overview': trip.overview or "",
+        'itinerary': ordered_itinerary,
+        'included': trip.included or "",
+        'excluded': trip.excluded or "",
     }
-    if trip.details_url:
-        response = requests.get(trip.details_url)
-        if response.status_code==200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            overview = soup.select_one('div#overview .overview')
-            itinerary = soup.select_one('div#itinerary .ckEditor')
-            included = soup.select_one('div#included-excluded div:nth-child(1) div')
-            excluded = soup.select_one('div#included-excluded div:nth-child(2) div')
-
-            # Save scraped data to database
-            trip.overview = overview.get_text(strip=True) if overview else ""
-            if itinerary:
-                text = itinerary.get_text("\n", strip=True)
-                day_blocks = re.split(r'(Day\s*\d+)', text)
-                structured_itinerary = []
-                for i in range(1, len(day_blocks), 2):  
-                    day = day_blocks[i] 
-                    details = day_blocks[i+1].strip()
-                    structured_itinerary.append(f"{day}: {details}")
-                trip.itinerary = structured_itinerary
-            else:
-                trip.itinerary = []
-            trip.included = included.get_text(strip=True) if included else ""
-            trip.excluded = excluded.get_text(strip=True) if excluded else ""
-            trip.save()
-
-            details_data.update({
-                "overview": trip.overview,
-                "itinerary": trip.itinerary,
-                "included": trip.included,
-                "excluded": trip.excluded
-            })
-        else:
-            details_data["error"] = "Unable to fetch details"
-    else:
-        details_data["error"] = "No details URL provided"
     return JsonResponse(details_data)
-
 
 @csrf_exempt
 def add_domestic_trip(request):
@@ -181,6 +89,59 @@ def add_domestic_trip(request):
             return JsonResponse({'success':False,'error':str(e)}, status=400)
     return JsonResponse({'error':'POST Method is required'}, status=405)
 
+@csrf_exempt
+def update_domestic_trip(request, trip_id):
+    if request.method in ['PUT', 'PATCH']:
+        try:
+            trip = DomesticTrip.objects.get(id=trip_id)
+            data = json.loads(request.body)
+
+            trip.title = data.get('title', trip.title)
+            trip.description = data.get('description',trip.description)
+            trip.details_url = data.get('details_url',trip.details_url)
+            trip.overview = data.get('overview', trip.overview)
+            trip.itinerary = data.get('itinerary', trip.itinerary)
+            trip.included = data.get('included', trip.included)
+            trip.excluded = data.get('excluded', trip.excluded)
+            
+            trip.save()
+            return JsonResponse({'success':True})
+        except DomesticTrip.DoesNotExist:
+            return JsonResponse({'error':'Domestic Trip not found'}, status=400)
+    return JsonResponse({'error':'Check your Method'},status=405)
+
+
+@csrf_exempt
+def delete_domestic_trip(request, trip_id):
+    if request.method == 'DELETE':
+        try:
+            trip = DomesticTrip.objects.get(id=trip_id)
+            trip.delete()
+            return JsonResponse({'success':True})
+        except DomesticTrip.DoesNotExist:
+            return JsonResponse({'error':'Domestic Trip not found'},status=400)
+    return JsonResponse({'error':'Delete Method required'}, status=405)
+
+@csrf_exempt
+def update_international_trip(request, trip_id):
+    if request.method in ['PUT', 'PATCH']:
+        try:
+            trip = InternationalTrip.objects.get(id=trip_id)
+            data = json.loads(request.body)
+
+            trip.title = data.get('title', trip.title)
+            trip.description = data.get('description',trip.description)
+            trip.details_url = data.get('details_url',trip.details_url)
+            trip.overview = data.get('overview', trip.overview)
+            trip.itinerary = data.get('itinerary', trip.itinerary)
+            trip.included = data.get('included', trip.included)
+            trip.excluded = data.get('excluded', trip.excluded)
+            
+            trip.save()
+            return JsonResponse({'success':True})
+        except InternationalTrip.DoesNotExist:
+            return JsonResponse({'error':'Domestic Trip not found'}, status=400)
+    return JsonResponse({'error':'Check your Method'},status=405)
 
 
 @csrf_exempt
@@ -201,6 +162,20 @@ def add_international_trip(request):
         except Exception as e:
             return JsonResponse({'success':False,'error':str(e)}, status=400)
     return JsonResponse({'error':'POST Method is required'}, status=405)
+
+
+@csrf_exempt
+def delete_international_trip(request, trip_id):
+    if request.method == 'DELETE':
+        try:
+            trip = InternationalTrip.objects.get(id=trip_id)
+            trip.delete()
+            return JsonResponse({'success':True})
+        except InternationalTrip.DoesNotExist:
+            return JsonResponse({'error':'International Trip not found'},status=400)
+    return JsonResponse({'error':'Delete Method required'}, status=405)
+
+
 
 
 
