@@ -1,11 +1,11 @@
-# 🗺️ Travel Destinations API
+# Travel API
 
 A simple Django-based REST-like API for managing Domestic and International Trips, Services and Blogs.  
 Supports basic CRUD operations (Create, Read, Update, Delete) with JSON responses.  
 
 ---
 
-## 🚀 Features
+## Features
 - List all domestic and international trips
 - Add a new trip
 - Update existing trips 
@@ -15,14 +15,14 @@ Supports basic CRUD operations (Create, Read, Update, Delete) with JSON response
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 - Python 3
 - Django
 - PostgreSQL
 
 ---
 
-## 📂 Endpoints
+## Endpoints
 
 ### Domestic Trips
 - `GET /domestic-destinations/` 
@@ -37,14 +37,14 @@ Supports basic CRUD operations (Create, Read, Update, Delete) with JSON response
 - `PUT /international-destinations/<id>/update/`
 - `PATCH /international-destinations/<id>/update/`
 - `DELETE /international-destinations/<id>/`
-- 
+  
 ### Services
 - `GET /service/`
 - `POST /service/add_service/`
 - `PUT /service/<id>/update/`
 - `PATCH /service/<id>/update/`
 - `DELETE /service/<id>/delete/`
-- 
+  
 ### Services
 - `GET /blog/`
 - `POST /blog/add_blog/`
@@ -53,7 +53,7 @@ Supports basic CRUD operations (Create, Read, Update, Delete) with JSON response
 - `DELETE /blog/<id>/delete/`
 ---
 
-## 🧪 Testing with Postman
+## Testing with Postman
 1. Open **Postman**
 2. Choose the method (**GET/POST/PUT/PATCH/DELETE**)
 3. Use the endpoint (e.g., `http://127.0.0.1:8000/domestic-destinations/1/update/`)
