@@ -3,8 +3,6 @@ from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from collections import OrderedDict
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.utils.decorators import method_decorator
 
 def fetch_domestic_trips(request):
     domestic_destinations = list(DomesticTrip.objects.values(
@@ -69,11 +67,7 @@ def fetch_international_trip_details(request, trip_id):
     return JsonResponse(details_data)
 
 
-def staff_required(view_func):
-    return user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser))(view_func)
-
 @csrf_exempt
-@staff_required
 def add_domestic_trip(request):
     if request.method == "POST":
         try:

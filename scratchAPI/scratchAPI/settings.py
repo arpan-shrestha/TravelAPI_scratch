@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'main',
     'service',
     'blog',
+    'auth_app',
 
 ]
 
