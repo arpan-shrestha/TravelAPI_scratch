@@ -89,6 +89,7 @@ Response:
 
 2. Refresh Access Token
 `POST /auth/refresh-token/`
+
 Request body (JSON):
 ```json
 {
