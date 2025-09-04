@@ -2,7 +2,6 @@ from .models import Services
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from auth_app.utils import token_required
 
 
 # Create your views here.
@@ -28,7 +27,6 @@ def fetch_service_details(request, service_id):
     return JsonResponse(details_data)
 
 @csrf_exempt
-@token_required
 def add_service(request):
     if request.method == 'POST':
         try:
@@ -62,7 +60,6 @@ def update_service(request, service_id):
     return JsonResponse({'error':'Check your Method'}, status=405)
 
 @csrf_exempt
-@token_required
 def delete_service(request, service_id):
     if request.method == 'DELETE':
         try:

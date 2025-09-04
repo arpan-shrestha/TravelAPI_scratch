@@ -62,7 +62,7 @@ def refresh_token_view(request):
     
     token_obj.access_token = tokens['access_token']
     token_obj.access_token_expire = make_aware(tokens['access_token_expire'])
-    # token_obj.refresh_token_expire = make_aware(tokens['refresh_token_expire'])
+
 
     token_obj.save(
         update_fields=[
@@ -76,3 +76,23 @@ def refresh_token_view(request):
         'access_token_expire':tokens['access_token_expire'].isoformat(),
         'refresh_token_expire':token_obj.refresh_token_expire.isoformat(),
     })
+
+
+@csrf_exempt
+def logout_view(request):
+    if request.method != 'POST':
+        return JsonResponse({'error':'POST Method Required'},status=405)
+    data = json.loads(request.body)
+    access_token=data.get('access_token')
+    if not access_token:
+        return JsonResponse({'error':'Access token required'},status=400)
+    try:
+        token_obj=AuthToken.objects.get(access_token=access_token, is_active=True)
+    except AuthToken.DoesNotExist:
+        return JsonResponse({'error':'Invalid access tokem'}, status=401)
+    
+    token_obj.is_active=False
+    token_obj.save(update_fields=['is_active'])
+    return JsonResponse({'msg':'Logged out'})
+
+

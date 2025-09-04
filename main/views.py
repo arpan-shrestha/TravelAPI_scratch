@@ -3,7 +3,9 @@ from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from collections import OrderedDict
+from RBAC.decorator import token_required
 
+@token_required(required_role='admin')
 def fetch_domestic_trips(request):
     domestic_destinations = list(DomesticTrip.objects.values(
         'id', 'title', 'description', 'details_url'
