@@ -62,7 +62,7 @@ def refresh_token_view(request):
     
     token_obj.access_token = tokens['access_token']
     token_obj.access_token_expire = make_aware(tokens['access_token_expire'])
-    # token_obj.refresh_token_expire = make_aware(tokens['refresh_token_expire'])
+
 
     token_obj.save(
         update_fields=[

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'service',
     'blog',
     'auth_app',
+    'role_based_auth',
 
 ]
 

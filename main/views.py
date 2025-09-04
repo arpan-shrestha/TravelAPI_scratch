@@ -3,7 +3,10 @@ from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from collections import OrderedDict
+from role_based_auth.decorators import token_required
 
+
+@token_required(required_role='admin')
 def fetch_domestic_trips(request):
     domestic_destinations = list(DomesticTrip.objects.values(
         'id', 'title', 'description', 'details_url'
@@ -109,6 +112,7 @@ def update_domestic_trip(request, trip_id):
 
 
 @csrf_exempt
+@token_required(required_role='admin')
 def delete_domestic_trip(request, trip_id):
     if request.method == 'DELETE':
         try:
