@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'service',
     'blog',
     'auth_app',
-    'RBAC'
+    'RBAC',
 
 ]
 
@@ -51,7 +51,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'RBAC.middleware.RBACMiddleware',
+    # 'RBAC.middleware.RBACMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

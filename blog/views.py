@@ -3,14 +3,15 @@ from django.http import JsonResponse
 from .models import Blog
 from django.views.decorators.csrf import csrf_exempt
 import json
+from RBAC.permission_decorator import permission_required
 # Create your views here.
 
+@permission_required("view_blog")
 def blogs(request):
     blog_list = list(Blog.objects.values(
         'id','title','description','details_url','published_date'
     ))
     return JsonResponse({'Blog':blog_list})
-
 
 @csrf_exempt
 def add_blog(request):

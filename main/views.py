@@ -3,15 +3,16 @@ from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from collections import OrderedDict
-from RBAC.decorator import token_required
+from RBAC.permission_decorator import permission_required
 
-
+@permission_required('view_domestic_trip')
 def fetch_domestic_trips(request):
     domestic_destinations = list(DomesticTrip.objects.values(
         'id', 'title', 'description', 'details_url'
     ))
     return JsonResponse({"domestic_destinations": domestic_destinations})
 
+@permission_required('view_domestic_trip')
 def fetch_domestic_trip_details(request, trip_id):
     try:
         trip = DomesticTrip.objects.get(id=trip_id)
@@ -37,7 +38,7 @@ def fetch_domestic_trip_details(request, trip_id):
 
     return JsonResponse(details_data)
 
-
+@permission_required('view_international_trip')
 def fetch_international_trips(request):
     international_destinations=list(InternationalTrip.objects.values(
         'id','title','description','details_url'
@@ -70,6 +71,7 @@ def fetch_international_trip_details(request, trip_id):
 
 
 @csrf_exempt
+@permission_required('add_domestic_trip')
 def add_domestic_trip(request):
     if request.method == "POST":
         try:
