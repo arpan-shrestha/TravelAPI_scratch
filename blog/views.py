@@ -4,9 +4,10 @@ from .models import Blog
 from django.views.decorators.csrf import csrf_exempt
 import json
 from RBAC.permission_decorator import permission_required
+from django.shortcuts import render
 # Create your views here.
 
-@permission_required("view_blog")
+# @permission_required("view_blog")
 def blogs(request):
     blog_list = list(Blog.objects.values(
         'id','title','description','details_url','published_date'

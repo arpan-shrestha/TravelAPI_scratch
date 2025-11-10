@@ -8,3 +8,5 @@ urlpatterns = [
     path('<int:blog_id>/update/', views.update_blog),
     path('<int:blog_id>/delete/', views.delete_blog),
 ]
+
+
